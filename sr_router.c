@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
+#include <string.h>
 
 #include "sr_if.h"
 #include "sr_rt.h"
@@ -84,7 +84,7 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
 }
 
 void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
-  // get length to create a new packet, get outgoing interface
+  /* get length to create a new packet and get outgoing interface */
   struct sr_if *iface = sr_get_outgoing_interface(sr->routing_table, ar_tip);
   unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
   uint8_t *packet = (uint8_t *)calloc(1, len);
@@ -165,7 +165,6 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   }
 
   // get outgoing interface
-  sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
   struct sr_if *iface_out = sr_get_outgoing_interface(sr->routing_table, ip_hdr->ip_dst);
 
   // if we cant forward the packet, icmp net unreachable to the original sender
@@ -180,7 +179,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
     sr_forward(sr, packet, len, iface_out, arpentry->mac);
     free(arpentry);
   } else {
-    struct sr_arpreq *req = sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, iface_out->name);
+    sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, iface_out->name);
   }
 }
 
@@ -239,7 +238,7 @@ void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struc
 I use this function for both type 3 and type 11 icmp because in type 3 icmp structure, the next MTU field is also unused,
 making the structure identical to type 11 time exceeded messages. did not create a new struct/function only for time exceeded.
 */
-int sr_send_icmp_failure(struct sr_instance *sr, uint8_t *failed_packet, uint8_t icmp_type, uint8_t icmp_code, struct sr_if *iface_out) {
+void sr_send_icmp_failure(struct sr_instance *sr, uint8_t *failed_packet, uint8_t icmp_type, uint8_t icmp_code, struct sr_if *iface_out) {
   // create new packet for icmp failure
   unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
   uint8_t *packet = (uint8_t *)calloc(1, len);

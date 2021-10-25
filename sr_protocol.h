@@ -154,7 +154,7 @@ enum sr_ip_protocol {
   ip_protocol_udp = 0x0011,
 };
 
-// types from wikipedia
+/* types from wikipedia */
 enum sr_icmp_protocol_type {
   destination_unreachable = 0x0003,
   echo_reply = 0x0,
@@ -162,7 +162,7 @@ enum sr_icmp_protocol_type {
   time_exceeded = 0x000b,
 };
 
-// codes from wikipedia
+/* codes from wikipedia */
 enum sr_icmp_protocol_code {
   net_unreachable = 0x0,
   host_unreachable = 0x0001,

@@ -67,7 +67,12 @@ int sr_read_from_server(struct sr_instance* );
 /* -- sr_router.c -- */
 void sr_init(struct sr_instance* );
 void sr_handlepacket(struct sr_instance* , uint8_t * , unsigned int , char* );
+void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int len, struct sr_if *iface);
 void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip);
+void sr_send_arp_reply(struct sr_instance* sr, uint8_t *arpreq, struct sr_if *iface);
+void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int len, struct sr_if *iface);
+void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned int len, struct sr_if *iface);
+void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struct sr_if *if_src, uint8_t *if_dst);
 int sr_send_icmp_failure(struct sr_instance *sr, uint8_t *failed_packet, uint8_t icmp_type, uint8_t icmp_code, struct sr_if *iface_out);
 
 /* -- sr_if.c -- */
