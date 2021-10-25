@@ -3,7 +3,8 @@
 #include <string.h>
 #include "sr_protocol.h"
 #include "sr_utils.h"
-
+#include "sr_router.h"
+#include "sr_rt.h"
 
 uint16_t cksum (const void *_data, int len) {
   const uint8_t *data = _data;
@@ -183,3 +184,27 @@ void print_hdrs(uint8_t *buf, uint32_t length) {
   }
 }
 
+sr_arp_hdr_t *get_arp_hdr(uint8_t *packet) {
+  return (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+}
+
+sr_ip_hdr_t *get_ip_hdr(uint8_t *packet) {
+  return (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+}
+
+sr_icmp_hdr_t *get_icmp_hdr(uint8_t *packet) {
+  return (sr_icmp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+}
+
+struct sr_if* sr_get_outgoing_interface(struct sr_rt* rt_entry, uint32_t tip) {
+
+  while(rt_entry) {
+    uint32_t candidate = rt_entry->mask.s_addr & tip;
+
+    if(candidate == rt_entry->dest.s_addr)
+       return sr_get_interface(rt_entry, rt_entry->interface);
+
+    rt_entry = rt_entry->next;
+  }
+  return NULL;
+}

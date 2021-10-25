@@ -45,4 +45,10 @@ void print_hdr_arp(uint8_t *buf);
 /* prints all headers, starting from eth */
 void print_hdrs(uint8_t *buf, uint32_t length);
 
+sr_arp_hdr_t *get_arp_hdr(uint8_t *packet);
+sr_ip_hdr_t *get_ip_hdr(uint8_t *packet);
+sr_icmp_hdr_t *get_icmp_hdr(uint8_t *packet);
+
+struct sr_if *sr_get_outgoing_interface(struct sr_rt* rt_entry, uint32_t tip);
+
 #endif /* -- SR_UTILS_H -- */
