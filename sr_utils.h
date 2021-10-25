@@ -28,6 +28,10 @@
 #ifndef SR_UTILS_H
 #define SR_UTILS_H
 
+#include "sr_rt.h"
+#include "sr_if.h"
+#include "sr_protocol.h"
+
 uint16_t cksum(const void *_data, int len);
 
 uint16_t ethertype(uint8_t *buf);
@@ -49,6 +53,6 @@ sr_arp_hdr_t *get_arp_hdr(uint8_t *packet);
 sr_ip_hdr_t *get_ip_hdr(uint8_t *packet);
 sr_icmp_hdr_t *get_icmp_hdr(uint8_t *packet);
 
-struct sr_if *sr_get_outgoing_interface(struct sr_rt* rt_entry, uint32_t tip);
+struct sr_if *sr_get_outgoing_interface(struct sr_instance *sr, uint32_t tip);
 
 #endif /* -- SR_UTILS_H -- */

@@ -196,13 +196,14 @@ sr_icmp_hdr_t *get_icmp_hdr(uint8_t *packet) {
   return (sr_icmp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 }
 
-struct sr_if* sr_get_outgoing_interface(struct sr_rt* rt_entry, uint32_t tip) {
+struct sr_if *sr_get_outgoing_interface(struct sr_instance *sr, uint32_t tip) {
+  struct sr_rt *rt_entry = sr->routing_table;
 
   while(rt_entry) {
     uint32_t candidate = rt_entry->mask.s_addr & tip;
 
     if(candidate == rt_entry->dest.s_addr)
-       return sr_get_interface(rt_entry, rt_entry->interface);
+       return sr_get_interface(sr, rt_entry->interface);
 
     rt_entry = rt_entry->next;
   }
