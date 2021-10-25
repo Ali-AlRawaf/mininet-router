@@ -85,7 +85,7 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
 
 void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
   /* get length to create a new packet and get outgoing interface */
-  struct sr_if *iface = sr_get_outgoing_interface(sr->routing_table, ar_tip);
+  struct sr_if *iface = sr_get_outgoing_interface(sr, ar_tip);
   unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
   uint8_t *packet = (uint8_t *)calloc(1, len);
 
@@ -165,7 +165,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   }
 
   /* get outgoing interface */
-  struct sr_if *iface_out = sr_get_outgoing_interface(sr->routing_table, ip_hdr->ip_dst);
+  struct sr_if *iface_out = sr_get_outgoing_interface(sr, ip_hdr->ip_dst);
 
   /* if we cant forward the packet, icmp net unreachable to the original sender */
   if(!iface_out) {
