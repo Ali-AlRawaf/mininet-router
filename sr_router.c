@@ -189,7 +189,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   /* forward and send ARP request if destination ip is not in our cache */
   struct sr_arpentry *arpentry = sr_arpcache_lookup(&sr->cache, ip_hdr->ip_dst);
   if(arpentry) {
-    printf("We have an ARP entry. Forwarding packet.\n");
+    printf("We have an ARP entry for destination. Forwarding packet.\n");
     sr_forward(sr, packet, len, iface_out, arpentry->mac);
     free(arpentry);
   } else {
