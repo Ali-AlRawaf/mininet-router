@@ -241,6 +241,7 @@ void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struc
 
   printf("Forwarding packet with ethernet header:\n");
   print_hdr_eth(packet);
+  printf("\n");
 
   /* recompute ip checksum */
   ip_hdr->ip_sum = 0;
