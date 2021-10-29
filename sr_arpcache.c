@@ -45,8 +45,7 @@ void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
   See the comments in the header file for an idea of what it should look like.
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
-    pthread_mutex_lock(&sr->cache.lock);
-    printf(" : ARP REQUESTS\n");
+    printf("SWEEPING\n");
     struct sr_arpreq *req = sr->cache.requests;
 
     while (req != NULL) {
@@ -55,7 +54,6 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
         handle_arpreq(sr, req);
         req = next_req;
     }
-    pthread_mutex_unlock(&sr->cache.lock);
 }
 
 /* You should not need to touch the rest of this code. */
@@ -264,6 +262,8 @@ void *sr_arpcache_timeout(void *sr_ptr) {
     while (1) {
         sleep(1.0);
         
+        printf("AWAKE\n");
+
         pthread_mutex_lock(&(cache->lock));
     
         time_t curtime = time(NULL);
