@@ -321,7 +321,7 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(packet);
   assert(interface);
 
-  printf("*** -> Received packet of length %d \n at %s\n",len, interface);
+  printf("*** -> Received packet of length %d at %s\n",len, interface);
 
   /* fill in code here */
 
