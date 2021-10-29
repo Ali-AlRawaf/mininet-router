@@ -41,9 +41,7 @@ void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
     struct sr_arpreq *req = sr->cache.requests;
-
     while (req != NULL) {
-        print_addr_ip_int(req->ip);
         struct sr_arpreq *next_req = req->next;
         handle_arpreq(sr, req);
         req = next_req;
