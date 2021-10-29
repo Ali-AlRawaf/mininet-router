@@ -252,7 +252,7 @@ void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struc
   memcpy(eth_hdr->ether_dhost, if_dst, ETHER_ADDR_LEN);
   memcpy(eth_hdr->ether_shost, if_src->addr, ETHER_ADDR_LEN);
 
-  printf("Forwarding packet out of %s\n", if_src->name);
+  printf("Forwarding packet out of %s\n\n", if_src->name);
 
   /* recompute ip checksum */
   ip_hdr->ip_sum = 0;
