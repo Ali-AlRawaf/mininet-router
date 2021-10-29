@@ -63,7 +63,7 @@ void print_addr_ip_int(uint32_t ip) {
   curOctet = (ip << 16) >> 24;
   fprintf(stderr, "%d.", curOctet);
   curOctet = (ip << 24) >> 24;
-  fprintf(stderr, "%d ", curOctet);
+  fprintf(stderr, "%d", curOctet);
 }
 
 

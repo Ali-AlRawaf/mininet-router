@@ -81,7 +81,7 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
       sr_forward(sr, waiting_packet->buf, waiting_packet->len, iface, arp_hdr->ar_sha);
       waiting_packet = waiting_packet->next;
     }
-    pthread_mutex_lock(&sr->cache.lock);
+    pthread_mutex_unlock(&sr->cache.lock);
     sr_arpreq_destroy(&sr->cache, req);
   } else {
     printf("DROPPED: ARP operation not recognized.\n\n");
@@ -191,8 +191,8 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
 
   /* forward and send ARP request if destination ip is not in our cache */
   struct sr_arpentry *arpentry = sr_arpcache_lookup(&sr->cache, ip_hdr->ip_dst);
-  if(arpentry) {
-    printf("We have an ARP entry for destination. Forwarding packet.\n");
+  if(arpentry && arpentry->valid) {
+    printf("We have a valid ARP entry for destination. Forwarding packet.\n");
     sr_forward(sr, packet, len, iface_out, arpentry->mac);
     free(arpentry);
   } else {

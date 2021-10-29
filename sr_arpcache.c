@@ -14,13 +14,7 @@
 #include "sr_utils.h"
 
 void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
-    if(difftime(time(NULL), req->sent) < 1.0) {
-        print_addr_ip_int(req->ip);
-        printf(" is not recieving my request yet.\n");
-        return;
-    }
-
-    if(req->times_sent >= 5){
+    if(req->times_sent >= 5) {
         struct sr_packet *waiting_packet = req->packets;
 
         while(waiting_packet){
@@ -46,7 +40,6 @@ void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
   See the comments in the header file for an idea of what it should look like.
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
-    printf("SWEEPING\n");
     struct sr_arpreq *req = sr->cache.requests;
 
     while (req != NULL) {
@@ -263,16 +256,10 @@ void *sr_arpcache_timeout(void *sr_ptr) {
     
     while (1) {
         sleep(1.0);
-        
-        printf("AWAKE, ");
 
         pthread_mutex_lock(&(cache->lock));
-
-        printf("LOCK, ");
     
         time_t curtime = time(NULL);
-
-        printf("TIME, ");
         
         int i;    
         for (i = 0; i < SR_ARPCACHE_SZ; i++) {
@@ -280,14 +267,11 @@ void *sr_arpcache_timeout(void *sr_ptr) {
                 cache->entries[i].valid = 0;
             }
         }
-
-        printf("VALID.\n");
         
         sr_arpcache_sweepreqs(sr);
 
         pthread_mutex_unlock(&(cache->lock));
     }
-    printf("KILLED!\n");
     return NULL;
 }
 
