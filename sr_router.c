@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "sr_if.h"
 #include "sr_rt.h"
@@ -56,19 +57,24 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
   sr_arp_hdr_t *arp_hdr = get_arp_hdr(packet);
 
   if(!valid_arp_length(len)){
-    Debug("ARP packet not long enough.\n");
+    printf("DROPPED: ARP packet not long enough.\n\n");
     return;
   }
 
   uint16_t op = ntohs(arp_hdr->ar_op);
 
   if(op == arp_op_request){
+    printf("Got ARP request.\n");
     sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
-    if(arp_hdr->ar_tip == iface->ip)
+    if(arp_hdr->ar_tip == iface->ip){
       sr_send_arp_reply(sr, packet, iface);
+      printf("Sent an ARP reply to %"PRIu32"\n\n", arp_hdr->ar_sip);
+    }
     return;
   } else if (op == arp_op_reply) {
+    printf("Got ARP reply from %"PRIu32"\n\n", arp_hdr->ar_sip);
     struct sr_arpreq *req = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
+    printf("Forwarding any waiting packets.\n");
     pthread_mutex_lock(&sr->cache.lock);
     struct sr_packet *waiting_packet = req->packets;
     while(waiting_packet) {
@@ -78,7 +84,7 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
     pthread_mutex_lock(&sr->cache.lock);
     sr_arpreq_destroy(&sr->cache, req);
   } else {
-    Debug("ARP operation not recognized.\n");
+    printf("DROPPED: ARP operation not recognized.\n\n");
     return;
   }
 }
@@ -91,7 +97,7 @@ void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
 
   /* populate ethernet header */
   sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
-  memset(eth_hdr->ether_dhost, 255, ETHER_ADDR_LEN);
+  memset(eth_hdr->ether_dhost, 0xff, ETHER_ADDR_LEN);
   memcpy(eth_hdr->ether_shost, iface->addr, ETHER_ADDR_LEN);
   eth_hdr->ether_type = htons(ethertype_arp);
 
@@ -104,7 +110,7 @@ void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
   arp_hdr->ar_op = htons(arp_op_request);
   memcpy(arp_hdr->ar_sha, iface->addr, ETHER_ADDR_LEN);
   arp_hdr->ar_sip = iface->ip;
-  memset(arp_hdr->ar_tha, 255, ETHER_ADDR_LEN);
+  memset(arp_hdr->ar_tha, 0xff, ETHER_ADDR_LEN);
   arp_hdr->ar_tip = ar_tip;
 
   sr_send_packet(sr, packet, len, iface->name);
@@ -143,6 +149,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
 
   /* validate length and checksum */
   if(!valid_ip_length(len) || !valid_ip_cksum(ip_hdr)) {
+    printf("DROPPED: IP packet not long enough or wrong checksum.\n\n");
     return;
   }
 
@@ -150,6 +157,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   struct sr_if *interface = sr->if_list;
   while(interface) {
     if(interface->ip == ip_hdr->ip_dst) {
+      printf("This packet is destined for us, intercepted.\n\n");
       sr_intercept_ip_packet(sr, packet, len, interface);
       return;
     }
@@ -160,6 +168,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   ip_hdr->ip_ttl--;
 
   if(ip_hdr->ip_ttl == 0) {
+    printf("TTL is 0, sending ICMP failure back to sender out of %s\n\n", iface);
     sr_send_icmp_failure(sr, packet, time_exceeded, ttl_expired, iface);
     return;
   }
@@ -169,6 +178,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
 
   /* if we cant forward the packet, icmp net unreachable to the original sender */
   if(!iface_out) {
+    printf("Can't forward, sending ICMP failure back to sender out of %s\n\n", iface);
     sr_send_icmp_failure(sr, packet, destination_unreachable, net_unreachable, iface);
     return;
   }
@@ -176,9 +186,11 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   /* forward and send ARP request if destination ip is not in our cache */
   struct sr_arpentry *arpentry = sr_arpcache_lookup(&sr->cache, ip_hdr->ip_dst);
   if(arpentry) {
+    printf("We have an ARP entry. Forwarding packet.\n");
     sr_forward(sr, packet, len, iface_out, arpentry->mac);
     free(arpentry);
   } else {
+    printf("This packet will wait for arp reply from %"PRIu32"\n\n", ip_hdr->ip_dst);
     sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, iface_out->name);
   }
 }
@@ -226,6 +238,9 @@ void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struc
   /* update ethernet header */
   memcpy(eth_hdr->ether_dhost, if_dst, ETHER_ADDR_LEN);
   memcpy(eth_hdr->ether_shost, if_src->addr, ETHER_ADDR_LEN);
+
+  printf("Forwarding packet with ethernet header:\n");
+  print_hdr_eth(packet);
 
   /* recompute ip checksum */
   ip_hdr->ip_sum = 0;
@@ -305,7 +320,7 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(packet);
   assert(interface);
 
-  printf("*** -> Received packet of length %d \n",len);
+  printf("*** -> Received packet of length %d \n at %s",len, interface);
 
   /* fill in code here */
 
@@ -317,6 +332,6 @@ void sr_handlepacket(struct sr_instance* sr,
   else if (type == ethertype_ip)
     sr_handle_ip_packet(sr, packet, len, iface);
   else
-    Debug("Dropping packet - neither ARP nor IP\n");
+    printf("DROPPED: neither ARP nor IP packet\n");
 }/* end sr_ForwardPacket */
 

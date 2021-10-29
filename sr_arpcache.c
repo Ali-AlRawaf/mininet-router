@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include <string.h>
+#include <inttypes.h>
 #include "sr_arpcache.h"
 #include "sr_router.h"
 #include "sr_if.h"
@@ -19,11 +20,13 @@ void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
         struct sr_packet *waiting_packet = req->packets;
 
         while(waiting_packet){
+            printf("5 ARP requests have been sent to %"PRIu32", sending ICMP failure back to sender out of %s\n", req->ip, waiting_packet->iface);
             sr_send_icmp_failure(sr, waiting_packet->buf, destination_unreachable, host_unreachable, sr_get_interface(sr, waiting_packet->iface));
             waiting_packet = waiting_packet->next;
         }
         sr_arpreq_destroy(&sr->cache, req);
     } else {
+        printf("Sending ARP request to %"PRIu32", has been sent %d time(s) already.\n", req->ip, req->times_sent);
         sr_send_arp_request(sr, req->ip);
         req->sent = time(NULL);
         req->times_sent++;
