@@ -14,8 +14,11 @@
 #include "sr_utils.h"
 
 void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
-    if(difftime(time(NULL), req->sent) < 1.0)
+    if(difftime(time(NULL), req->sent) < 1.0) {
+        print_addr_ip_int(req->ip);
+        printf(" is not recieving my request yet.\n");
         return;
+    }
 
     if(req->times_sent >= 5){
         struct sr_packet *waiting_packet = req->packets;

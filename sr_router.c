@@ -98,7 +98,7 @@ void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
 
   /* populate ethernet header */
   sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
-  memset(eth_hdr->ether_dhost, 0xff, ETHER_ADDR_LEN);
+  memset(eth_hdr->ether_dhost, 255, ETHER_ADDR_LEN);
   memcpy(eth_hdr->ether_shost, iface->addr, ETHER_ADDR_LEN);
   eth_hdr->ether_type = htons(ethertype_arp);
 
@@ -111,7 +111,7 @@ void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
   arp_hdr->ar_op = htons(arp_op_request);
   memcpy(arp_hdr->ar_sha, iface->addr, ETHER_ADDR_LEN);
   arp_hdr->ar_sip = iface->ip;
-  memset(arp_hdr->ar_tha, 0xff, ETHER_ADDR_LEN);
+  memset(arp_hdr->ar_tha, 255, ETHER_ADDR_LEN);
   arp_hdr->ar_tip = ar_tip;
 
   sr_send_packet(sr, packet, len, iface->name);
