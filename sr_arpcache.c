@@ -279,7 +279,7 @@ void *sr_arpcache_timeout(void *sr_ptr) {
 
         pthread_mutex_unlock(&(cache->lock));
     }
-    
+    printf("KILLED!\n");
     return NULL;
 }
 
