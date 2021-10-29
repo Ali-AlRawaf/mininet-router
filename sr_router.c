@@ -263,10 +263,9 @@ void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struc
 
   printf("Forwarding packet out of %s\n\n", if_src->name);
 
-  /* recompute ip checksum
+  /* recompute ip checksum */
   ip_hdr->ip_sum = 0;
   ip_hdr->ip_sum = cksum((const void *)ip_hdr, sizeof(sr_ip_hdr_t));
-  */
 
   sr_send_packet(sr, packet, len, if_src->name);
   return;
