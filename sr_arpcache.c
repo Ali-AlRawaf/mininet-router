@@ -22,17 +22,17 @@ void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
 
         while(waiting_packet){
             printf("5 ARP requests have been sent to ");
+            sr_send_icmp_failure(sr, waiting_packet->buf, destination_unreachable, host_unreachable, sr_get_interface(sr, waiting_packet->iface));
             print_addr_ip_int(req->ip);
             printf(" , sending ICMP failure back to sender out of %s\n", waiting_packet->iface);
-            sr_send_icmp_failure(sr, waiting_packet->buf, destination_unreachable, host_unreachable, sr_get_interface(sr, waiting_packet->iface));
             waiting_packet = waiting_packet->next;
         }
         sr_arpreq_destroy(&sr->cache, req);
     } else {
         printf("Sending ARP request to ");
+        sr_send_arp_request(sr, req->ip);
         print_addr_ip_int(req->ip);
         printf(" , has been sent %d time(s) already.\n", req->times_sent);
-        sr_send_arp_request(sr, req->ip);
         req->sent = time(NULL);
         req->times_sent++;
     }

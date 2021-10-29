@@ -67,17 +67,17 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
     printf("Got ARP request.\n");
     sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
     if(arp_hdr->ar_tip == iface->ip){
-      sr_send_arp_reply(sr, packet, iface);
       printf("Sent an ARP reply to ");
+      sr_send_arp_reply(sr, packet, iface);
       print_addr_ip_int(arp_hdr->ar_sip);
       printf("\n\n");
     }
     return;
   } else if (op == arp_op_reply) {
     printf("Got ARP reply from ");
+    struct sr_arpreq *req = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
     print_addr_ip_int(arp_hdr->ar_sip);
     printf("\n");
-    struct sr_arpreq *req = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
     printf("Forwarding any waiting packets.\n");
     pthread_mutex_lock(&sr->cache.lock);
     struct sr_packet *waiting_packet = req->packets;
@@ -195,9 +195,9 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
     free(arpentry);
   } else {
     printf("This packet will wait for arp reply from ");
+    sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, iface_out->name);
     print_addr_ip_int(ip_hdr->ip_dst);
     printf("\n\n");
-    sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, iface_out->name);
   }
 }
 
