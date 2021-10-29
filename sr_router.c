@@ -195,7 +195,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   } else {
     sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, iface_out->name);
     print_addr_ip_int(ip_hdr->ip_dst);
-    printf(" has to send me an ARP reply, this packet will wait for it.\n\n");
+    printf(" has to send me an ARP reply, this packet will wait for it.\n");
   }
 }
 

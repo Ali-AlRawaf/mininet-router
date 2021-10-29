@@ -30,7 +30,7 @@ void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
     } else {
         sr_send_arp_request(sr, req->ip);
         print_addr_ip_int(req->ip);
-        printf(" has gotten an ARP request, has been sent %d time(s) already.\n", req->times_sent);
+        printf(" has gotten an ARP request, has been sent %d time(s) already.\n\n", req->times_sent);
         req->sent = time(NULL);
         req->times_sent++;
     }
