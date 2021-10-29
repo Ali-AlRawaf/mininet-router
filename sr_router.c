@@ -148,6 +148,8 @@ void sr_send_arp_reply(struct sr_instance* sr, uint8_t *arpreq, struct sr_if *if
 void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int len, struct sr_if *iface) {
   sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
 
+  printf("Got an IP packet.\n");
+
   /* validate length and checksum */
   if(!valid_ip_length(len) || !valid_ip_cksum(ip_hdr)) {
     printf("DROPPED: IP packet not long enough or wrong checksum.\n\n");
@@ -202,18 +204,27 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
   sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
 
   if (ip_protocol(packet) == ip_protocol_tcp || ip_protocol(packet) == ip_protocol_udp) {
+    printf("TCP or UDP protocol, sending ICMP failure back to sender out of %s\n", iface->name);
     sr_send_icmp_failure(sr, packet, destination_unreachable, port_unreachable, iface);
     return;
   } else if(ip_protocol(packet) != ip_protocol_icmp) {
+    printf("DROPPED: Idk this protocol.\n");
     return;
   }
 
   sr_icmp_hdr_t *icmp_hdr = get_icmp_hdr(packet);
 
-  if(!valid_icmp_length(len) || !valid_icmp_cksum(icmp_hdr))
+  printf("It's an ICMP packet.\n");
+
+  if(!valid_icmp_length(len) || !valid_icmp_cksum(icmp_hdr)) {
+    printf("DROPPED: ICMP length or checksum incorrect\n");
     return;
+  }
 
   if(icmp_hdr->icmp_type == echo_request && icmp_hdr->icmp_code == empty){
+    print_addr_ip_int(ip_hdr->ip_src);
+    printf(" got my ICMP echo reply.\n");
+
     /* reverse ethernet header */
     memcpy(eth_hdr->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
     memcpy(eth_hdr->ether_shost, iface->addr, ETHER_ADDR_LEN);
