@@ -250,6 +250,9 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
   return;
 }
 
+/*
+Updates the ethernet header for the next hop, and 
+*/
 void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struct sr_if *if_src, uint8_t *if_dst) {
   sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
   sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
@@ -260,17 +263,20 @@ void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struc
 
   printf("Forwarding packet out of %s\n\n", if_src->name);
 
-  /* recompute ip checksum */
+  /* recompute ip checksum
   ip_hdr->ip_sum = 0;
-  ip_hdr->ip_sum = cksum((const void *)ip_hdr, sizeof(sr_ip_hdr_t)); 
+  ip_hdr->ip_sum = cksum((const void *)ip_hdr, sizeof(sr_ip_hdr_t));
+  */
 
   sr_send_packet(sr, packet, len, if_src->name);
   return;
 }
 
 /* 
-I use this function for both type 3 and type 11 icmp because in type 3 icmp structure, the next MTU field is also unused,
-making the structure identical to type 11 time exceeded messages. did not create a new struct/function only for time exceeded.
+Sends an ICMP packet to the sender of an IP packet that was detected to have/cause an issue.
+failed_packet is the buffer of the packet which had/caused an issue.
+icmp_type and icmp_code are the ICMP error specifiers, defined in sr_protocol.h
+iface_out is the interface that the packet will be sent out of from this router, sr.
 */
 void sr_send_icmp_failure(struct sr_instance *sr, uint8_t *failed_packet, uint8_t icmp_type, uint8_t icmp_code, struct sr_if *iface_out) {
   /* create new packet for icmp failure */
@@ -290,13 +296,13 @@ void sr_send_icmp_failure(struct sr_instance *sr, uint8_t *failed_packet, uint8_
   sr_ip_hdr_t *failed_ip_hdr = get_ip_hdr(failed_packet);
 
   ip_hdr->ip_hl = failed_ip_hdr->ip_hl;
+  ip_hdr->ip_v = failed_ip_hdr->ip_v;
   ip_hdr->ip_tos = failed_ip_hdr->ip_tos;
   ip_hdr->ip_len = htons(len - sizeof(sr_ethernet_hdr_t));
   ip_hdr->ip_id = 0;
-  ip_hdr->ip_p = ip_protocol_icmp;
   ip_hdr->ip_off = htons(IP_DF);
-  ip_hdr->ip_ttl = INIT_TTL;
-  ip_hdr->ip_v = failed_ip_hdr->ip_v;
+  ip_hdr->ip_ttl = 64;
+  ip_hdr->ip_p = ip_protocol_icmp;
   ip_hdr->ip_src = iface_out->ip;
   ip_hdr->ip_dst = failed_ip_hdr->ip_src;
   ip_hdr->ip_sum = 0;
