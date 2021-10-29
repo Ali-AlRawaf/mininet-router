@@ -46,7 +46,7 @@ void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
     pthread_mutex_lock(&sr->cache.lock);
-    printf(" : ARP REQUESTS ");
+    printf(" : ARP REQUESTS\n");
     struct sr_arpreq *req = sr->cache.requests;
 
     while (req != NULL) {
