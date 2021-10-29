@@ -168,7 +168,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   ip_hdr->ip_ttl--;
 
   if(ip_hdr->ip_ttl == 0) {
-    printf("TTL is 0, sending ICMP failure back to sender out of %s\n\n", iface);
+    printf("TTL is 0, sending ICMP failure back to sender out of %s\n\n", iface->name);
     sr_send_icmp_failure(sr, packet, time_exceeded, ttl_expired, iface);
     return;
   }
@@ -178,7 +178,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
 
   /* if we cant forward the packet, icmp net unreachable to the original sender */
   if(!iface_out) {
-    printf("Can't forward, sending ICMP failure back to sender out of %s\n\n", iface);
+    printf("Can't forward, sending ICMP failure back to sender out of %s\n\n", iface->name);
     sr_send_icmp_failure(sr, packet, destination_unreachable, net_unreachable, iface);
     return;
   }
