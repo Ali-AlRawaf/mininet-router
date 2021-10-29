@@ -71,7 +71,6 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
       print_addr_ip_int(arp_hdr->ar_sip);
       printf(" has gotten my ARP reply\n\n");
     }
-    return;
   } else if (op == arp_op_reply) {
     struct sr_arpreq *req = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
     print_addr_ip_int(arp_hdr->ar_sip);
@@ -86,8 +85,8 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
     sr_arpreq_destroy(&sr->cache, req);
   } else {
     printf("DROPPED: ARP operation not recognized.\n\n");
-    return;
   }
+  return;
 }
 
 void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
@@ -115,6 +114,7 @@ void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
   arp_hdr->ar_tip = ar_tip;
 
   sr_send_packet(sr, packet, len, iface->name);
+  return;
 }
 
 void sr_send_arp_reply(struct sr_instance* sr, uint8_t *arpreq, struct sr_if *iface) {
@@ -143,6 +143,7 @@ void sr_send_arp_reply(struct sr_instance* sr, uint8_t *arpreq, struct sr_if *if
   arp_hdr->ar_tip = arpreq_arp_hdr->ar_sip;
 
   sr_send_packet(sr, packet, len, iface->name);
+  return;
 }
 
 void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int len, struct sr_if *iface) {
@@ -197,6 +198,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
     print_addr_ip_int(ip_hdr->ip_dst);
     printf(" has to send me an ARP reply, this packet will wait for it.\n");
   }
+  return;
 }
 
 void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned int len, struct sr_if *iface) {
@@ -242,6 +244,7 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
 
     sr_send_packet(sr, packet, len, iface->name);
   }
+  return;
 }
 
 void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struct sr_if *if_src, uint8_t *if_dst) {
@@ -259,6 +262,7 @@ void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struc
   ip_hdr->ip_sum = cksum((const void *)ip_hdr, sizeof(sr_ip_hdr_t)); 
 
   sr_send_packet(sr, packet, len, if_src->name);
+  return;
 }
 
 /* 
@@ -304,6 +308,7 @@ void sr_send_icmp_failure(struct sr_instance *sr, uint8_t *failed_packet, uint8_
   icmp_hdr->icmp_sum = cksum(icmp_hdr, sizeof(sr_icmp_t3_hdr_t));
 
   sr_send_packet(sr, packet, len, iface_out->name);
+  return;
 }
 
 /*---------------------------------------------------------------------
@@ -345,5 +350,6 @@ void sr_handlepacket(struct sr_instance* sr,
     sr_handle_ip_packet(sr, packet, len, iface);
   else
     printf("DROPPED: neither ARP nor IP packet\n");
+  return;
 }/* end sr_ForwardPacket */
 

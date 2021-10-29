@@ -37,6 +37,7 @@ void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
         req->sent = time(NULL);
         req->times_sent++;
     }
+    return;
 }
 
 /* 
@@ -54,6 +55,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
         handle_arpreq(sr, req);
         req = next_req;
     }
+    return;
 }
 
 /* You should not need to touch the rest of this code. */
