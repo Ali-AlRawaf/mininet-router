@@ -114,7 +114,7 @@ void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
   arp_hdr->ar_tip = ar_tip;
 
   sr_send_packet(sr, packet, len, iface->name);
-  printf("Successfully sent ARP request\n\n");
+  printf("Successfully sent ARP request\n");
   return;
 }
 
