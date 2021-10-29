@@ -262,11 +262,15 @@ void *sr_arpcache_timeout(void *sr_ptr) {
     while (1) {
         sleep(1.0);
         
-        printf("AWAKE\n");
+        printf("AWAKE, ");
 
         pthread_mutex_lock(&(cache->lock));
+
+        printf("LOCK, ");
     
         time_t curtime = time(NULL);
+
+        printf("TIME, ");
         
         int i;    
         for (i = 0; i < SR_ARPCACHE_SZ; i++) {
@@ -274,6 +278,8 @@ void *sr_arpcache_timeout(void *sr_ptr) {
                 cache->entries[i].valid = 0;
             }
         }
+
+        printf("VALID.\n");
         
         sr_arpcache_sweepreqs(sr);
 
