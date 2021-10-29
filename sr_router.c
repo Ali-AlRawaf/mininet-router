@@ -114,6 +114,7 @@ void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
   arp_hdr->ar_tip = ar_tip;
 
   sr_send_packet(sr, packet, len, iface->name);
+  printf("Successfully sent ARP request\n\n");
   return;
 }
 
@@ -143,6 +144,7 @@ void sr_send_arp_reply(struct sr_instance* sr, uint8_t *arpreq, struct sr_if *if
   arp_hdr->ar_tip = arpreq_arp_hdr->ar_sip;
 
   sr_send_packet(sr, packet, len, iface->name);
+  printf("Successfully sent ARP reply\n\n");
   return;
 }
 
@@ -243,6 +245,7 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
     icmp_hdr->icmp_sum = cksum(icmp_hdr, sizeof(sr_icmp_hdr_t)); 
 
     sr_send_packet(sr, packet, len, iface->name);
+    printf("Successfully sent ICMP response\n\n");
   }
   return;
 }
@@ -308,6 +311,7 @@ void sr_send_icmp_failure(struct sr_instance *sr, uint8_t *failed_packet, uint8_
   icmp_hdr->icmp_sum = cksum(icmp_hdr, sizeof(sr_icmp_t3_hdr_t));
 
   sr_send_packet(sr, packet, len, iface_out->name);
+  printf("Successfully sent ICMP failure\n\n");
   return;
 }
 
