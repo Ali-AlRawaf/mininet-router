@@ -227,11 +227,13 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
   sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
   sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
 
-  if (ip_protocol(packet) == ip_protocol_tcp || ip_protocol(packet) == ip_protocol_udp) {
+  uint8_t protocol = ip_protocol(ip_hdr);
+
+  if (protocol == ip_protocol_tcp || protocol == ip_protocol_udp) {
     printf("TCP or UDP protocol, sending ICMP failure back to sender out of %s\n", iface->name);
     sr_send_icmp_failure(sr, packet, destination_unreachable, port_unreachable, iface);
     return;
-  } else if(ip_protocol(packet) != ip_protocol_icmp) {
+  } else if(protocol != ip_protocol_icmp) {
     printf("DROPPED: Idk this protocol: %x.\n", ip_protocol(packet));
     return;
   }
