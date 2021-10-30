@@ -22,10 +22,10 @@ int valid_ip_cksum(sr_ip_hdr_t *ip_hdr){
   return is_valid;
 }
 
-int valid_icmp_cksum(sr_icmp_hdr_t *icmp_hdr){
+int valid_icmp_cksum(sr_icmp_hdr_t *icmp_hdr, uint16_t ip_len){
   uint16_t given_cksum = icmp_hdr->icmp_sum;
   icmp_hdr->icmp_sum = 0;
-  int is_valid = cksum(icmp_hdr, sizeof(sr_icmp_hdr_t)) == given_cksum;
+  int is_valid = cksum(icmp_hdr, ntohs(ip_len) - sizeof(sr_ip_hdr_t)) == given_cksum;
   icmp_hdr->icmp_sum = given_cksum;
   return is_valid;
 }

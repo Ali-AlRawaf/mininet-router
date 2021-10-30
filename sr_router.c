@@ -232,7 +232,7 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
     sr_send_icmp_failure(sr, packet, destination_unreachable, port_unreachable, iface);
     return;
   } else if(protocol != ip_protocol_icmp) {
-    printf("DROPPED: Idk this protocol: %x.\n", ip_protocol(packet));
+    printf("DROPPED: Idk this protocol: %x.\n", protocol);
     return;
   }
 
@@ -246,7 +246,7 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
 
   sr_icmp_hdr_t *icmp_hdr = get_icmp_hdr(packet);
 
-  if(!valid_icmp_cksum(icmp_hdr)){
+  if(!valid_icmp_cksum(icmp_hdr, ip_hdr->ip_len)){
     printf("DROPPED: ICMP packet checksum incorrect\n");
     print_hdrs(packet, len);
     return;
