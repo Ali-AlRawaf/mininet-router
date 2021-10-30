@@ -224,9 +224,7 @@ Handles IP packets destined for this router, sr. Verifies length and checksum. S
 or UDP protocol. If it gets an ICMP echo request, sends back an ICMP echo reply through iface.
 */
 void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned int len, struct sr_if *iface) {
-  sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
   sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
-
   uint8_t protocol = ip_protocol((uint8_t *)ip_hdr);
 
   if (protocol == ip_protocol_tcp || protocol == ip_protocol_udp) {
@@ -242,13 +240,19 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
 
   printf("It's an ICMP packet.\n");
 
-  if(!valid_icmp_length(len) || !valid_icmp_cksum(icmp_hdr)) {
-    printf("DROPPED: ICMP length or checksum incorrect\n");
+  if(!valid_icmp_length(len)) {
+    printf("DROPPED: ICMP length too small\n");
+    return;
+  }
+
+  if(!valid_icmp_cksum(icmp_hdr)){
+    printf("DROPPED: ICMP checksum incorrect\n");
     return;
   }
 
   if(icmp_hdr->icmp_type == echo_request && icmp_hdr->icmp_code == empty){
     /* reverse ethernet header */
+    sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
     memcpy(eth_hdr->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
     memcpy(eth_hdr->ether_shost, iface->addr, ETHER_ADDR_LEN);
 
