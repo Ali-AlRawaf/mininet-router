@@ -13,6 +13,11 @@
 #include "sr_protocol.h"
 #include "sr_utils.h"
 
+/*
+This function gets called for every request in the ARP caches pending requests. If an ARP 
+request has been sent 5 times, then drop all waiting packets send ICMP host unreachable to the 
+sender of each packet. Otherwise, another ARP request is sent.
+*/
 void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
     if(req->times_sent >= 5) {
         struct sr_packet *waiting_packet = req->packets;

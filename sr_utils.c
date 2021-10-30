@@ -184,18 +184,31 @@ void print_hdrs(uint8_t *buf, uint32_t length) {
   }
 }
 
+/*
+Returns the ARP header data as a well defined struct for ARP headers.
+*/
 sr_arp_hdr_t *get_arp_hdr(uint8_t *packet) {
   return (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 }
 
+/*
+Returns the IP header data as a well defined struct for IP headers.
+*/
 sr_ip_hdr_t *get_ip_hdr(uint8_t *packet) {
   return (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 }
 
+/*
+Returns the ICMP header data as a well defined struct for ICMP headers.
+*/
 sr_icmp_hdr_t *get_icmp_hdr(uint8_t *packet) {
   return (sr_icmp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 }
 
+/*
+Uses algorithm from lecture to find which outgoing interface to send a packet out of,
+given the destination IP address: tip. Returns NULL if there is no such interface.
+*/
 struct sr_if *sr_get_outgoing_interface(struct sr_instance *sr, uint32_t tip) {
   struct sr_rt *rt_entry = sr->routing_table;
 

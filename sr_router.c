@@ -53,6 +53,11 @@ void sr_init(struct sr_instance* sr)
 
 } /* -- sr_init -- */
 
+/*
+Handles ARP packets. If router recieves an ARP request, cache the IP and mac of the sender, and send an ARP
+reply back to the sender with our IP and mac. If an ARP reply is recieved, we cache IP and mac of the sender
+and forward any packets waiting for this ARP reply. Packets are dropped when the ARP opcode isn't recognized.
+*/
 void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int len, struct sr_if *iface) {
   sr_arp_hdr_t *arp_hdr = get_arp_hdr(packet);
 
@@ -89,6 +94,9 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
   return;
 }
 
+/*
+Sends an ARP request to the host at IP address ar_tip.
+*/
 void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
   /* get length to create a new packet and get outgoing interface */
   struct sr_if *iface = sr_get_outgoing_interface(sr, ar_tip);
@@ -118,6 +126,10 @@ void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
   return;
 }
 
+/*
+Sends an arp reply out of iface to the sender of arpreq, 
+which is the buffer of the ARP request packet.
+*/
 void sr_send_arp_reply(struct sr_instance* sr, uint8_t *arpreq, struct sr_if *iface) {
   /* get length to create a new packet */
   unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
@@ -138,9 +150,9 @@ void sr_send_arp_reply(struct sr_instance* sr, uint8_t *arpreq, struct sr_if *if
   arp_hdr->ar_hln = arpreq_arp_hdr->ar_hln;
   arp_hdr->ar_pln = arpreq_arp_hdr->ar_pln;
   arp_hdr->ar_op = htons(arp_op_reply);
-  memcpy(arp_hdr->ar_sha, iface->addr, ETHER_ADDR_LEN);
+  memcpy(arp_hdr->ar_sha, iface->addr, ETHER_ADDR_LEN); /* our ip address */
   arp_hdr->ar_sip = iface->ip;
-  memcpy(arp_hdr->ar_tha, arpreq_arp_hdr->ar_sha, ETHER_ADDR_LEN);
+  memcpy(arp_hdr->ar_tha, arpreq_arp_hdr->ar_sha, ETHER_ADDR_LEN); /* our mac address */
   arp_hdr->ar_tip = arpreq_arp_hdr->ar_sip;
 
   sr_send_packet(sr, packet, len, iface->name);
@@ -148,6 +160,10 @@ void sr_send_arp_reply(struct sr_instance* sr, uint8_t *arpreq, struct sr_if *if
   return;
 }
 
+/*
+Handles an IP packet. Checks length and checksum, determines where packet is destined for sr or not,
+and forwards the packet if necessary.
+*/
 void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int len, struct sr_if *iface) {
   sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
 
@@ -203,6 +219,10 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   return;
 }
 
+/*
+Handles IP packets destined for this router, sr. Verifies length and checksum. Sends port unreachable if TCP 
+or UDP protocol. If it gets an ICMP echo request, sends back an ICMP echo reply through iface.
+*/
 void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned int len, struct sr_if *iface) {
   sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
   sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
@@ -212,7 +232,7 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
     sr_send_icmp_failure(sr, packet, destination_unreachable, port_unreachable, iface);
     return;
   } else if(ip_protocol(packet) != ip_protocol_icmp) {
-    printf("DROPPED: Idk this protocol.\n");
+    printf("DROPPED: Idk this protocol: %x.\n", ip_protocol(packet));
     return;
   }
 
@@ -251,7 +271,7 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
 }
 
 /*
-Updates the ethernet header for the next hop, and 
+Updates the ethernet header for the next hop with if_dst, recomputes checksum, sends packet out of if_src.
 */
 void sr_forward(struct sr_instance *sr, uint8_t *packet, unsigned int len, struct sr_if *if_src, uint8_t *if_dst) {
   sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
