@@ -221,7 +221,8 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
 
 /*
 Handles IP packets destined for this router, sr. Verifies length and checksum. Sends port unreachable if TCP 
-or UDP protocol. If it gets an ICMP echo request, sends back an ICMP echo reply through iface.
+or UDP protocol. If it gets an ICMP echo request, sends back an ICMP echo reply through iface by simply swapping the 
+ethernet source and destination mac addresses in the ethernet header of the echo request ICMP packet.
 */
 void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned int len, struct sr_if *iface) {
   sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
@@ -263,11 +264,11 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
     ip_hdr->ip_src = iface->ip;
     ip_hdr->ip_dst = temp;
 
-    /* icmp reply header and recompute checksum */
+    /* populate icmp reply header and recompute checksum */
     icmp_hdr->icmp_type = echo_reply;
     icmp_hdr->icmp_code = empty;
     icmp_hdr->icmp_sum = 0;
-    icmp_hdr->icmp_sum = cksum(icmp_hdr, sizeof(sr_icmp_hdr_t)); 
+    icmp_hdr->icmp_sum = cksum(icmp_hdr, sizeof(sr_icmp_hdr_t));
 
     sr_send_packet(sr, packet, len, iface->name);
     print_addr_ip_int(ip_hdr->ip_src);

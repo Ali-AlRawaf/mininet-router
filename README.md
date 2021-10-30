@@ -26,3 +26,7 @@
 3. If you try to ping an address that doesn't exist in the network, or is unreachable, you will recieve net unreachable.
 4. Can get port unreachable by using TCP or UDP.
 5. Can get host unreachable by getting 5 ARP requests to get sent. Can achieve by creating a host that doesn't send ARP replies and trying to ping that host from another host.
+
+***Assumption***
+
+Only one assumption; when this router sends ICMP packets, they are always in response to a packet that was sent to it. Either this router sends an ICMP error packet, or sends ICMP echo replies. The router has sufficient information to send this packet (destination ip address, outgoing interface is the incoming interface of the packet invoking this ICMP packet to be sent, destination ethernet address). Therefore we do not send an ARP request. This behaviour can be seen by fresh starting a mininet session and running *client ping -c 3 10.0.1.1*. This will ping the router, and evidently, the client doesn't send us an ARP request. I follow the same in the implementation of this router.
