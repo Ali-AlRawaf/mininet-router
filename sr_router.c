@@ -179,7 +179,7 @@ void sr_handle_ip_packet(struct sr_instance* sr, uint8_t *packet, unsigned int l
   struct sr_if *interface = sr->if_list;
   while(interface) {
     if(interface->ip == ip_hdr->ip_dst) {
-      printf("This packet is destined for us, intercepted.\n\n");
+      printf("This packet is destined for us, intercepted.\n");
       sr_intercept_ip_packet(sr, packet, len, interface);
       return;
     }
@@ -236,17 +236,19 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
     return;
   }
 
-  sr_icmp_hdr_t *icmp_hdr = get_icmp_hdr(packet);
-
   printf("It's an ICMP packet.\n");
 
   if(!valid_icmp_length(len)) {
-    printf("DROPPED: ICMP length too small\n");
+    printf("DROPPED: ICMP packet length too small\n");
+    print_hdrs(packet, len);
     return;
   }
 
+  sr_icmp_hdr_t *icmp_hdr = get_icmp_hdr(packet);
+
   if(!valid_icmp_cksum(icmp_hdr)){
-    printf("DROPPED: ICMP checksum incorrect\n");
+    printf("DROPPED: ICMP packet checksum incorrect\n");
+    print_hdrs(packet, len);
     return;
   }
 
