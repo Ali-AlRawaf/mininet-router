@@ -98,7 +98,9 @@ void sr_handle_arp_packet(struct sr_instance* sr, uint8_t *packet, unsigned int 
 Sends an ARP request to the host at IP address ar_tip.
 */
 void sr_send_arp_request(struct sr_instance* sr, uint32_t ar_tip) {
-  /* get length to create a new packet and get outgoing interface */
+  /* get length to create a new packet and get outgoing interface,
+     note that we know iface isn't null because we checked this before
+     queuing the request for ar_tip. */
   struct sr_if *iface = sr_get_outgoing_interface(sr, ar_tip);
   unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
   uint8_t *packet = (uint8_t *)calloc(1, len);
