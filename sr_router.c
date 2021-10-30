@@ -156,7 +156,7 @@ void sr_send_arp_reply(struct sr_instance* sr, uint8_t *arpreq, struct sr_if *if
   arp_hdr->ar_tip = arpreq_arp_hdr->ar_sip;
 
   sr_send_packet(sr, packet, len, iface->name);
-  printf("Successfully sent ARP reply\n\n");
+  printf("Successfully sent ARP reply\n");
   return;
 }
 
@@ -254,12 +254,12 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
   }
 
   if(icmp_hdr->icmp_type == echo_request && icmp_hdr->icmp_code == empty){
-    /* reverse ethernet header */
+    /* swap ethernet header */
     sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
     memcpy(eth_hdr->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
     memcpy(eth_hdr->ether_shost, iface->addr, ETHER_ADDR_LEN);
 
-    /* reverse ip header */
+    /* swap ip header */
     uint32_t temp = ip_hdr->ip_src;
     ip_hdr->ip_src = iface->ip;
     ip_hdr->ip_dst = temp;
