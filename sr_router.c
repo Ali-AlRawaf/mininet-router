@@ -227,7 +227,7 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
   sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
   sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
 
-  uint8_t protocol = ip_protocol(ip_hdr);
+  uint8_t protocol = ip_protocol((uint8_t *)ip_hdr);
 
   if (protocol == ip_protocol_tcp || protocol == ip_protocol_udp) {
     printf("TCP or UDP protocol, sending ICMP failure back to sender out of %s\n", iface->name);
@@ -248,9 +248,6 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
   }
 
   if(icmp_hdr->icmp_type == echo_request && icmp_hdr->icmp_code == empty){
-    print_addr_ip_int(ip_hdr->ip_src);
-    printf(" got my ICMP echo reply.\n");
-
     /* reverse ethernet header */
     memcpy(eth_hdr->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
     memcpy(eth_hdr->ether_shost, iface->addr, ETHER_ADDR_LEN);
@@ -267,6 +264,8 @@ void sr_intercept_ip_packet(struct sr_instance *sr, uint8_t *packet, unsigned in
     icmp_hdr->icmp_sum = cksum(icmp_hdr, sizeof(sr_icmp_hdr_t)); 
 
     sr_send_packet(sr, packet, len, iface->name);
+    print_addr_ip_int(ip_hdr->ip_src);
+    printf(" got my ICMP echo reply.\n");
     printf("Successfully sent ICMP response\n\n");
   }
   return;
